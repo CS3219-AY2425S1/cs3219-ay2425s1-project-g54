@@ -32,7 +32,6 @@ import { type Question, problemComplexity } from "../../makeData";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import axios, { AxiosError } from "axios";
-import { Description } from "@mui/icons-material";
 
 const complexityTypeOptions = ["Easy", "Medium", "Hard"];
 // Styled components for the dialog
@@ -187,7 +186,13 @@ const Example = () => {
       {
         accessorKey: "description",
         header: "Description",
+        
         muiEditTextFieldProps: {
+          onKeyDown: (e : React.KeyboardEvent<HTMLInputElement>) => {
+            if(e.key === 'enter') {
+              return;
+            }
+          },
           required: true,
           multiline: true,
           variant: "outlined",
@@ -595,8 +600,9 @@ function useCreateQuestion() {
       //send api update request here
 
       const categoryArray = changeCategoryStringToArray(question.categories);
-      const reqBody = { ...question, categories: categoryArray };
-      return await axios.post("http://localhost:4000/api/question", reqBody);
+      const reqBody = {...question, categories: categoryArray};
+      
+      return await axios.post(process.env.REACT_APP_API_ENDPOINT!, reqBody);
     },
     //client side optimistic update
 
@@ -618,7 +624,7 @@ function useGetQuestions() {
     queryKey: ["questions"],
     //send api request here,
     queryFn: async () => {
-      return (await axios.get("http://localhost:4000/api/question/")).data;
+      return (await axios.get(process.env.REACT_APP_API_ENDPOINT!)).data;
     },
     refetchOnWindowFocus: false,
   });
@@ -632,11 +638,8 @@ function useUpdateQuestion() {
       //send api update request here
       const { qid, ...updatebody } = question;
       const categoryArray = changeCategoryStringToArray(updatebody.categories); // index 0 because right now its just array of length 1
-      const reqBody = { ...updatebody, categories: categoryArray };
-      return await axios.patch(
-        `http://localhost:4000/api/question/${qid}`,
-        reqBody
-      );
+      const reqBody = {...updatebody, categories: categoryArray}
+      return await axios.patch(`${process.env.REACT_APP_API_ENDPOINT}${qid}`, reqBody);
     },
     //client side optimistic update
     onMutate: (newQuestionInfo: Question) => {
@@ -660,7 +663,7 @@ function useDeleteQuestion() {
     mutationFn: async (questionId: string) => {
       //send api update request here
       const qid = +questionId;
-      return await axios.delete(`http://localhost:4000/api/question/${qid}`);
+      return await axios.delete(`${process.env["API_ENDPOINT"]}${qid}`);
     },
     //client side optimistic update
     onMutate: (questionId: string) => {
