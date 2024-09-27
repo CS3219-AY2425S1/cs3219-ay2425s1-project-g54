@@ -658,7 +658,7 @@ function useDeleteQuestion() {
     mutationFn: async (questionId: string) => {
       //send api update request here
       const qid = +questionId;
-      return await axios.delete(`${process.env["API_ENDPOINT"]}${qid}`);
+      return await axios.delete(`${process.env.REACT_APP_API_ENDPOINT}${qid}`);
     },
     //client side optimistic update
     onMutate: (questionId: string) => {
