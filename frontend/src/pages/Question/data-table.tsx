@@ -188,11 +188,6 @@ const Example = () => {
         header: "Description",
         
         muiEditTextFieldProps: {
-          onKeyDown: (e : React.KeyboardEvent<HTMLInputElement>) => {
-            if(e.key === 'enter') {
-              return;
-            }
-          },
           required: true,
           multiline: true,
           variant: "outlined",
