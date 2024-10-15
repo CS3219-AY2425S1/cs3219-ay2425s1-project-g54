@@ -22,7 +22,7 @@ export class MatchController extends EventEmitter {
     // Initialize Kafka
     this.kafka = new Kafka({
       clientId: "matchmaking-service",
-      brokers: ["localhost:9092"], // Set your Kafka broker here
+      brokers: ["localhost:29092"], // Set your Kafka broker here
     });
 
     this.producer = this.kafka.producer();
@@ -70,9 +70,22 @@ export class MatchController extends EventEmitter {
   async startConsumers(): Promise<void> {
     const difficulties = ["easy", "medium", "hard"];
 
+    // First, subscribe to all topics before running the consumer
     for (const difficulty of difficulties) {
-      await this.consumer.subscribe({ topic: difficulty });
+      try {
+        await this.consumer.subscribe({ topic: difficulty });
+        logger.info(`Subscribed to Kafka topic ${difficulty}`);
+      } catch (error) {
+        const errorMessage =
+          (error as Error).message || "startconsumer function error occurred";
+        logger.error(
+          `Error subscribing to Kafka topic ${difficulty}: ${errorMessage}`
+        );
+      }
+    }
 
+    // Now, start running the consumer to listen for messages from all topics
+    try {
       await this.consumer.run({
         eachMessage: async ({
           topic,
@@ -83,17 +96,16 @@ export class MatchController extends EventEmitter {
           partition: number;
           message: { value: Buffer | null };
         }) => {
-          // Check if message.value is not null
           if (message.value) {
             const queuedUser: QueuedUser = JSON.parse(message.value.toString());
             logger.info(
-              `Processing user ${queuedUser.userId} from ${difficulty} queue`
+              `Processing user ${queuedUser.userId} from ${topic} queue`
             );
 
             // Try to match the user
             const matchResult = await this.tryMatch(
               queuedUser,
-              difficulty.toUpperCase()
+              topic.toUpperCase()
             );
 
             if (matchResult) {
@@ -102,17 +114,21 @@ export class MatchController extends EventEmitter {
               // Emit the successful match
               this.emit("match-success", { user1Id, user2Id, match });
               logger.info(
-                `Match success: User ${user1Id} matched with ${user2Id} in ${difficulty} queue`
+                `Match success: User ${user1Id} matched with ${user2Id} in ${topic} queue`
               );
             }
           } else {
-            logger.warn("Received message with null value");
+            logger.warn(`Received message with null value from topic ${topic}`);
           }
         },
       });
+      logger.info("Kafka consumer running for all topics.");
+    } catch (error) {
+      const errorMessage =
+        (error as Error).message || "startconsumer function error occurred";
+      logger.error(`Error running Kafka consumer: ${errorMessage}`);
     }
   }
-
   // Remove the user from the Kafka queue (timeout handling)
   async removeFromMatchingPool(
     userId: string,
