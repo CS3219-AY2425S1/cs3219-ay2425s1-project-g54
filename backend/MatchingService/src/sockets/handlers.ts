@@ -23,13 +23,16 @@ export const initializeSocketHandlers = (io: Server): void => {
     logger.info(`User connected: ${userId}`);
   };
 
-
   const handleMatchRequest = (socket: Socket, request: MatchRequest) => {
     try {
       const userId = socket.data.userId;
       validateMatchRequest(request);
       socket.emit("match-request-accepted");
       logger.info(`Match requested for user ${userId}`, { request });
+
+      // Store the match request in socket data
+      socket.data.matchRequest = request;
+
       matchController.addToMatchingPool(userId, request);
     } catch (error) {
       socket.emit("match-request-error", {
@@ -43,10 +46,12 @@ export const initializeSocketHandlers = (io: Server): void => {
   const handleCancelMatch = (socket: Socket) => {
     const userId = socket.data.userId;
     const matchRequest: MatchRequest | undefined = socket.data.matchRequest;
+
     if (matchRequest) {
-      matchController.removeFromMatchingPool(userId, matchRequest);
+      matchController.removeFromMatchingPool(userId); // Update this line
       socket.emit("match-cancelled");
       logger.info(`Match cancelled for user ${userId}`);
+      delete socket.data.matchRequest; // Clear the match request after cancellation
     } else {
       logger.warn(
         `No match request found for user ${userId} when attempting to cancel match.`
@@ -57,11 +62,12 @@ export const initializeSocketHandlers = (io: Server): void => {
   const handleDisconnect = (socket: Socket) => {
     const userId = socket.data.userId;
     const matchRequest: MatchRequest | undefined = socket.data.matchRequest;
+
     if (matchRequest) {
-      matchController.removeFromMatchingPool(userId, matchRequest);
+      matchController.removeFromMatchingPool(userId); // Just call this method without parameters
     }
+
     matchController.removeConnection(userId);
-    socket.disconnect(true);
     logger.info(`User disconnected: ${userId}`);
   };
 

@@ -1,32 +1,41 @@
 import { EventEmitter } from "events";
-import { MatchRequest, UserMatch, QueuedUser } from "../utils/types";
+import { MatchRequest, UserMatch } from "../utils/types";
 import { config } from "../utils/config";
 import logger from "../utils/logger";
-import Deque from "denque";
-import { Mutex } from "../utils/mutex";
+import amqp from "amqplib";
 
 export class MatchController extends EventEmitter {
-  private waitingUsers: Map<string, Deque<QueuedUser>>;
   private matchTimeouts: Map<string, NodeJS.Timeout>;
-  private queueMutexes: Map<string, Mutex>;
   private connectedUsers: Map<string, string>; // userId: socketId
+  private rabbitMqConnection!: amqp.Connection;
+  private rabbitMqChannel!: amqp.Channel;
 
   constructor() {
     super();
-    this.waitingUsers = new Map([
-      ["EASY", new Deque<QueuedUser>()],
-      ["MEDIUM", new Deque<QueuedUser>()],
-      ["HARD", new Deque<QueuedUser>()],
-    ]);
     this.matchTimeouts = new Map();
-    this.queueMutexes = new Map([
-      ["EASY", new Mutex()],
-      ["MEDIUM", new Mutex()],
-      ["HARD", new Mutex()],
-    ]);
     this.connectedUsers = new Map();
+    this.initializeRabbitMq();
   }
-  
+
+  // Initialize RabbitMQ connection and channels
+  private async initializeRabbitMq(): Promise<void> {
+    try {
+      this.rabbitMqConnection = await amqp.connect(
+        "amqp://guest:guest@localhost:5672"
+      );
+      this.rabbitMqChannel = await this.rabbitMqConnection.createChannel();
+
+      // Create queues for each difficulty level
+      await this.rabbitMqChannel.assertQueue("EASY");
+      await this.rabbitMqChannel.assertQueue("MEDIUM");
+      await this.rabbitMqChannel.assertQueue("HARD");
+
+      logger.info("RabbitMQ initialized and queues declared.");
+    } catch (error) {
+      logger.error(`RabbitMQ initialization error: ${error}`);
+    }
+  }
+
   isUserConnected(userId: string): boolean {
     return this.connectedUsers.has(userId);
   }
@@ -37,13 +46,17 @@ export class MatchController extends EventEmitter {
       return false;
     }
     this.connectedUsers.set(userId, socketId);
-    logger.info(`User ${userId} connected. Total connections: ${this.connectedUsers.size}`);
+    logger.info(
+      `User ${userId} connected. Total connections: ${this.connectedUsers.size}`
+    );
     return true;
   }
 
   removeConnection(userId: string): void {
     this.connectedUsers.delete(userId);
-    logger.info(`User ${userId} disconnected. Total connections: ${this.connectedUsers.size}`);
+    logger.info(
+      `User ${userId} disconnected. Total connections: ${this.connectedUsers.size}`
+    );
   }
 
   async addToMatchingPool(
@@ -51,136 +64,92 @@ export class MatchController extends EventEmitter {
     request: MatchRequest
   ): Promise<void> {
     const { difficultyLevel } = request;
-    const mutex = this.queueMutexes.get(difficultyLevel);
 
-    if (mutex) {
-      const release = await mutex.acquire();
+    try {
+      const queuedUser = { ...request, userId }; // Include userId in the request
+      await this.rabbitMqChannel.sendToQueue(
+        difficultyLevel,
+        Buffer.from(JSON.stringify(queuedUser))
+      );
 
-      try {
-        // Add user to the appropriate difficulty queue
-        const queue = this.waitingUsers.get(difficultyLevel);
-        const queuedUser: QueuedUser = { ...request, userId }; // Include userId in the request
+      logger.info(`User ${userId} added to ${difficultyLevel} RabbitMQ queue.`);
 
-        queue?.push(queuedUser);
-        logger.info(
-          `User ${userId} added to ${difficultyLevel} queue. Queue size: ${queue?.size()}`
-        );
+      const timeout = setTimeout(() => {
+        this.removeFromMatchingPool(userId);
+        this.emit("match-timeout", this.connectedUsers.get(userId));
+        this.removeConnection(userId);
+        logger.info(`Match timeout for user ${userId}`);
+      }, config.matchTimeout);
 
-        const timeout = setTimeout(() => {
-          this.removeFromMatchingPool(userId, request);
-          this.emit("match-timeout", this.connectedUsers.get(userId));
-          this.removeConnection(userId);
-          logger.info(`Match timeout for user ${userId}`);
-        }, config.matchTimeout);
+      this.matchTimeouts.set(userId, timeout);
 
-        this.matchTimeouts.set(userId, timeout);
-
-        this.tryMatch(userId, request);
-      } catch (error) {
-        logger.error(`Error in addToMatchingPool: ${error}`);
-      } finally {
-        release(); // Release the lock
-      }
+      this.tryMatch(userId, request);
+    } catch (error) {
+      logger.error(`Error in addToMatchingPool: ${error}`);
     }
   }
 
-  async removeFromMatchingPool(
-    userId: string,
-    request: MatchRequest
-  ): Promise<void> {
-    const { difficultyLevel } = request;
-    const mutex = this.queueMutexes.get(difficultyLevel);
+  async removeFromMatchingPool(userId: string): Promise<void> {
+    this.removeConnection(userId);
+    logger.info(`User ${userId} connection removed from system.`);
 
-    if (mutex) {
-      const release = await mutex.acquire();
-
-      try {
-        const queue = this.waitingUsers.get(difficultyLevel);
-        if (queue) {
-          const updatedQueue = new Deque(
-            queue.toArray().filter((user) => user.userId !== userId)
-          );
-          this.waitingUsers.set(difficultyLevel, updatedQueue);
-          logger.info(
-            `User ${userId} removed from ${difficultyLevel} queue. Queue size: ${updatedQueue.size()}`
-          );
-        }
-
-        const timeout = this.matchTimeouts.get(userId);
-        if (timeout) {
-          clearTimeout(timeout);
-          this.matchTimeouts.delete(userId);
-        }
-      } catch (error) {
-        logger.error(`Error in removeFromMatchingPool: ${error}`);
-      } finally {
-        release();
-      }
+    const timeout = this.matchTimeouts.get(userId);
+    if (timeout) {
+      clearTimeout(timeout);
+      this.matchTimeouts.delete(userId);
     }
   }
 
   private async tryMatch(userId: string, request: MatchRequest): Promise<void> {
     const { difficultyLevel, category } = request;
-    const mutex = this.queueMutexes.get(difficultyLevel);
 
-    if (mutex) {
-      const release = await mutex.acquire();
+    try {
+      await this.rabbitMqChannel.consume(
+        difficultyLevel,
+        async (msg) => {
+          if (msg) {
+            const potentialMatch = JSON.parse(msg.content.toString());
 
-      try {
-        const queue = this.waitingUsers.get(difficultyLevel);
+            if (
+              potentialMatch.userId !== userId &&
+              this.isCompatibleMatch(request, potentialMatch)
+            ) {
+              const match: UserMatch = {
+                difficultyLevel,
+                category: category || potentialMatch.category || null,
+              };
 
-        if (!queue || queue.isEmpty()) {
-          logger.info(
-            `Queue is empty or no match for ${userId} in ${difficultyLevel} queue`
-          );
-          return;
-        }
+              this.emit("match-success", {
+                socket1Id: this.connectedUsers.get(userId),
+                socket2Id: this.connectedUsers.get(potentialMatch.userId),
+                match,
+              });
 
-        logger.info(
-          `Attempting match for user ${userId} in ${difficultyLevel} queue with queue size: ${queue.size()}`
-        );
+              this.removeFromMatchingPool(userId);
+              this.removeFromMatchingPool(potentialMatch.userId);
 
-        for (let i = 0; i < queue.size(); i++) {
-          const potentialMatch = queue.peekAt(i); // Peek at user
+              logger.info(
+                `Match success: User ${userId} matched with ${potentialMatch.userId} in ${difficultyLevel} queue`
+              );
 
-          if (!potentialMatch) continue;
+              // Acknowledge the message once a match is made
+              this.rabbitMqChannel.ack(msg);
 
-          const { userId: potentialMatchId } = potentialMatch;
-
-          if (potentialMatchId === userId) continue;
-
-          if (this.isCompatibleMatch(request, potentialMatch)) {
-            const match: UserMatch = {
-              difficultyLevel,
-              category: category || potentialMatch.category || null,
-            };
-
-            this.removeFromMatchingPool(userId, request);
-            this.removeFromMatchingPool(potentialMatchId, potentialMatch);
-
-            this.emit("match-success", {
-              socket1Id: this.connectedUsers.get(userId),
-              socket2Id: this.connectedUsers.get(potentialMatch.userId),
-              match,
-            });
-
-            logger.info(
-              `Match success: User ${userId} matched with ${potentialMatchId} in ${difficultyLevel} queue`
-            );
-            this.removeConnection(userId);
-            this.removeConnection(potentialMatch.userId);
-
-            return;
+              this.removeConnection(userId);
+              this.removeConnection(potentialMatch.userId);
+            } else {
+              // Requeue the message if no match is found
+              this.rabbitMqChannel.nack(msg, false, true);
+              logger.info(
+                `No match found for user ${userId} in ${difficultyLevel} queue`
+              );
+            }
           }
-          logger.info(
-            `No match found for user ${userId} in ${difficultyLevel} queue`
-          );
-        }
-      } catch (error) {
-        logger.error(`Error in tryMatch: ${error}`);
-      } finally {
-        release();
-      }
+        },
+        { noAck: false }
+      );
+    } catch (error) {
+      logger.error(`Error in tryMatch: ${error}`);
     }
   }
 
