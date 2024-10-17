@@ -2,7 +2,7 @@ import { io } from "socket.io-client";
 
 const userId = `user_12345`;
 
-const socket = io("http://localhost:4003", {
+const socket = io("http://localhost:3000", {
   auth: {
     userId: userId,
   },
