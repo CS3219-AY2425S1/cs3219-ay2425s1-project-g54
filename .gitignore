@@ -17,3 +17,6 @@ dist/
 .env.test.local
 .env.production.local
 .env
+
+# Matching Service client
+backend/MatchingServiceTest*

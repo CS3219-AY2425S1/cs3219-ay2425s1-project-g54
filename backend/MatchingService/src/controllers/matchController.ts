@@ -8,35 +8,36 @@ import { Mutex } from "async-mutex";
 export class MatchController extends EventEmitter {
   private matchTimeouts: Map<string, NodeJS.Timeout>;
   private connectedUsers: Map<string, string>; // userId: socketId
+  private userIdToUsername: Map<string, string>; // userId: username
   private queueMutex: Mutex;
 
   constructor() {
     super();
     this.matchTimeouts = new Map();
     this.connectedUsers = new Map();
+    this.userIdToUsername = new Map();
     this.queueMutex = new Mutex();
   }
 
-  isUserConnected(userId: string): boolean {
-    return this.connectedUsers.has(userId);
-  }
-
-  addConnection(userId: string, socketId: string): boolean {
+  addConnection(userId: string, username: string, socketId: string): boolean {
     if (this.connectedUsers.has(userId)) {
-      logger.warn(`User ${userId} already has an active connection`);
+      logger.warn(`User ${username} (${userId}) already has an active connection`);
       return false;
     }
     this.connectedUsers.set(userId, socketId);
+    this.userIdToUsername.set(userId, username);
     logger.info(
-      `User ${userId} connected. Total connections: ${this.connectedUsers.size}`
+      `User ${username} (${userId}) connected. Total connections: ${this.connectedUsers.size}`
     );
     return true;
   }
 
   removeConnection(userId: string): void {
+    const username = this.userIdToUsername.get(userId);
     this.connectedUsers.delete(userId);
+    this.userIdToUsername.delete(userId);
     logger.info(
-      `User ${userId} disconnected. Total connections: ${this.connectedUsers.size}`
+      `User ${username} (${userId}) disconnected. Total connections: ${this.connectedUsers.size}`
     );
   }
 
@@ -84,35 +85,33 @@ export class MatchController extends EventEmitter {
     request: MatchRequest
   ): Promise<void> {
     const { difficultyLevel, category } = request;
+    const username = this.userIdToUsername.get(userId);
     const queueSize = await this.getQueueLen(difficultyLevel);
     logger.info(
       `Queue size is ${queueSize} in ${difficultyLevel} queue`
     );
     // Check if queue is empty
     if (queueSize === 0) {
-      logger.info(
-        `Queue is empty in ${difficultyLevel} queue`
-      );
       // Add user to the appropriate Redis queue
       const queuedUser: QueuedUser = { ...request, userId }; // Include userId in the request
       await this.addToQueue(difficultyLevel, queuedUser);
 
       logger.info(
-        `User ${userId} added to ${difficultyLevel} queue. Queue size: ${await this.getQueueLen(difficultyLevel)}`
+        `User ${username} (${userId}) added to ${difficultyLevel} queue. Queue size: ${await this.getQueueLen(difficultyLevel)}`
       );
 
       const timeout = setTimeout(() => {
         this.removeFromMatchingPool(userId, request);
         this.emit("match-timeout", this.connectedUsers.get(userId));
         this.removeConnection(userId);
-        logger.info(`Match timeout for user ${userId}`);
+        logger.info(`Match timeout for user ${username} (${userId})`);
       }, config.matchTimeout);
 
       this.matchTimeouts.set(userId, timeout);
       return;
     } else {
       logger.info(
-        `Attempting match for user ${userId} in ${difficultyLevel} queue with queue size: ${queueSize}`
+        `Attempting match for user ${username} (${userId}) in ${difficultyLevel} queue with queue size: ${queueSize}`
       );
   
       const queue = await this.getQueueItems(difficultyLevel);
@@ -127,12 +126,12 @@ export class MatchController extends EventEmitter {
           };
           if (!category && !potentialMatch.category) {
             logger.info(
-              `Choosing a random category for ${userId} and ${potentialMatch.userId}`
+              `Choosing a random category for ${username} (${userId}) and ${potentialMatch.userId}`
             );
             match.category = this.getRandomCategory();
           }
-          this.removeFromMatchingPool(userId, request);
-          this.removeFromMatchingPool(potentialMatch.userId, potentialMatch);
+          await this.removeFromMatchingPool(userId, request);
+          await this.removeFromMatchingPool(potentialMatch.userId, potentialMatch);
   
           // Clear the timeout for both users
           clearTimeout(this.matchTimeouts.get(userId));
@@ -143,15 +142,17 @@ export class MatchController extends EventEmitter {
           this.emit("match-success", {
             socket1Id: this.connectedUsers.get(userId),
             socket2Id: this.connectedUsers.get(potentialMatch.userId),
+            username1: this.userIdToUsername.get(userId),
+            username2: this.userIdToUsername.get(potentialMatch.userId),
             match,
           });
-  
+          const potentialMatchUsername = this.userIdToUsername.get(potentialMatch.userId);
           logger.info(
-            `Match success: User ${userId} matched with ${potentialMatch.userId} in ${difficultyLevel} queue`
+            `Match success: User ${username} (${userId}) matched with ${potentialMatchUsername} (${potentialMatch.userId}) in ${difficultyLevel} queue.  Queue size: ${await this.getQueueLen(difficultyLevel)}`
           );
-  
           this.removeConnection(userId);
           this.removeConnection(potentialMatch.userId);
+          
   
           return;
         }
