@@ -1,0 +1,68 @@
+services:
+  frontend:
+    build:
+      context: ./frontend
+      target: ${BUILD_ENV}
+    ports:
+      - ${FRONTEND_PORT}:${FRONTEND_PORT}
+    environment:
+      - PORT=${FRONTEND_PORT}
+      - REACT_APP_USER_SVC_PORT=${USER_SVC_PORT}
+      - REACT_APP_QUESTION_SVC_PORT=${QUESTION_SVC_PORT}
+      - REACT_APP_MATCHING_SVC_PORT=${MATCHING_SVC_PORT}
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - user-service
+      - question-service
+      - matching-service
+
+  user-service:
+    build:
+      context: ./backend/UserService
+      target: ${BUILD_ENV}
+    ports:
+      - ${USER_SVC_PORT}:${USER_SVC_PORT}
+    environment:
+      - PORT=${USER_SVC_PORT}
+      - DB_LOCAL_URI=${USER_DB_URI}
+      - JWT_SECRET=${JWT_SECRET}
+    volumes:
+      - ./backend/UserService:/app
+      - /app/node_modules
+
+  question-service:
+    build:
+      context: ./backend/QuestionService
+      target: ${BUILD_ENV}
+    ports:
+      - ${QUESTION_SVC_PORT}:${QUESTION_SVC_PORT}
+    environment:
+      - PORT=${QUESTION_SVC_PORT}
+      - MONGOURI=${QUESTION_DB_URI}
+      - FRONTEND_PORT=${FRONTEND_PORT}
+    volumes:
+      - ./backend/QuestionService:/app
+      - /app/node_modules
+
+  matching-service:
+    build:
+      context: ./backend/MatchingService
+      target: ${BUILD_ENV}
+    ports:
+      - ${MATCHING_SVC_PORT}:${MATCHING_SVC_PORT}
+    environment:
+      - PORT=${MATCHING_SVC_PORT}
+      - REDIS_PORT=${REDIS_PORT}
+    volumes:
+      - ./backend/MatchingService:/app
+      - /app/node_modules
+    depends_on:
+      - redis
+
+  redis:
+    image: redis
+    container_name: redis-container
+    ports:
+      - ${REDIS_PORT}:${REDIS_PORT}
