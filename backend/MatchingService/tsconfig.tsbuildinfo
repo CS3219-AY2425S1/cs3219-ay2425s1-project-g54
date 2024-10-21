@@ -1,0 +1,1 @@
+{"root":["./src/index.ts","./src/controllers/matchcontroller.ts","./src/middleware/authmiddleware.ts","./src/middleware/errormiddleware.ts","./src/sockets/handlers.ts","./src/utils/config.ts","./src/utils/logger.ts","./src/utils/redisclient.ts","./src/utils/types.ts","./src/utils/validation.ts"],"version":"5.6.2"}
