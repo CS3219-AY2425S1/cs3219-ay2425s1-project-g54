@@ -23,7 +23,7 @@ services:
       - matching-service
       - collaboration-service
       - communication-service
-      - code-execution-service
+      # - code-execution-service
       - history-service
 
   user-service:
@@ -106,17 +106,17 @@ services:
       - ./backend/CommunicationService:/app
       - /app/node_modules
 
-  code-execution-service:
-    build:
-      context: ./backend/CodeExecutionService
-    ports:
-      - ${CODE_EXECUTION_SVC_PORT}:${CODE_EXECUTION_SVC_PORT}
-    environment:
-      - TORK_COORDINATOR_ADDRESS=0.0.0.0:${CODE_EXECUTION_SVC_PORT}
+  # code-execution-service:
+  #   build:
+  #     context: ./backend/CodeExecutionService
+  #   ports:
+  #     - ${CODE_EXECUTION_SVC_PORT}:${CODE_EXECUTION_SVC_PORT}
+  #   environment:
+  #     - TORK_COORDINATOR_ADDRESS=0.0.0.0:${CODE_EXECUTION_SVC_PORT}
 
-    volumes:
-      - ./backend/CodeExecutionService:/app
-      - /var/run/docker.sock:/var/run/docker.sock
+  #   volumes:
+  #     - ./backend/CodeExecutionService:/app
+  #     - /var/run/docker.sock:/var/run/docker.sock
   
   history-service:
     build:

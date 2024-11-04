@@ -4,6 +4,7 @@ import MenuItem from '@mui/material/MenuItem';
 import Text from '@mui/material/Typography';
 import { Stack } from '@mui/material';
 import React from "react";
+import { TypeSpecimen } from '@mui/icons-material';
 
 type LanguageVersions = {
     [key: string]: string;
@@ -19,12 +20,12 @@ interface LanguageSelectorProps {
 }
 
 export const LANGUAGE_VERSIONS: LanguageVersions = {
-    cpp: "10.20.0",
+    cpp: "10.2.0",
     java: "15.0.2",
     python: "3.10.0",
     javascript: "18.15.0",
+    typescript: "5.0.3",
     php: "8.2.3",
-    R: "4.1.0",
 };
 
 export const CODE_SNIPPETS: CodeSnippets = {
@@ -32,8 +33,8 @@ export const CODE_SNIPPETS: CodeSnippets = {
     java: `public class Main {\n\tpublic static void main(String[] args) {\n\t\tSystem.out.println("Hello World");\n\t}\n}\n`,
     python: `def greet(name):\n\tprint("Hello, " + name + "!")\n\ngreet("Alex")\n`,
     javascript: `function greet(name) {\n\tconsole.log("Hello, " + name + "!");\n}\n\ngreet("Alex");\n`,
+    typescript: `function greet(name: string) {\n\tconsole.log("Hello, " + name + "!");\n}\n\ngreet("Alex");\n`,
     php: "<?php\n\n$name = 'Alex';\necho $name;\n",
-    R: `name <- "Alex"\ncat("Hello, ", name, "!\n")\n`,
 };
 
 const languages: [string, string][] = Object.entries(LANGUAGE_VERSIONS);

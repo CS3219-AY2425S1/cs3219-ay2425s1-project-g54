@@ -60,7 +60,7 @@ const Output: React.FC<OutputProps> = ({ editorRef, language, qid }) => {
     try {
       setLoading(true);
       collabSocket?.emit("console-load", roomId, true);
-      const result = await executeCode(language, sourceCode);
+      const { run: result } = await executeCode(language, sourceCode);
       const consoleResults = result.output.split("\n");
       setOutput(consoleResults);
       collabSocket?.emit("console-change", roomId, qid, consoleResults);

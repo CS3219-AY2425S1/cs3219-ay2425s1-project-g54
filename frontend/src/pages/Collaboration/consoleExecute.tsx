@@ -1,47 +1,22 @@
-interface ExecuteCodeRequest {
-  language: string;
-  code: string;
-}
+import axios from "axios";
+import { LANGUAGE_VERSIONS } from "../../components/Collaboration/languageSelector";
 
-interface ExecuteCodeResponse {
-  output: string;
-  stderr?: string;
-}
+const API = axios.create({
+  baseURL: "https://emkc.org/api/v2/piston",
+});
 
-interface ExecuteCodeError {
-  message: string;
-}
-
-export const executeCode = async (
-  language: string,
-  sourceCode: string
-): Promise<ExecuteCodeResponse> => {
-  try {
-    const response = await fetch(`http://localhost:${process.env.REACT_APP_CODE_EXECUTION_SVC_PORT}/execute`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
+export const executeCode = async (language:string, sourceCode:string) => {
+  const response = await API.post("/execute", {
+    language: language,
+    version: LANGUAGE_VERSIONS[language],
+    files: [
+      {
+        content: sourceCode,
       },
-      body: JSON.stringify({
-        language: language,
-        code: sourceCode,
-      } as ExecuteCodeRequest),
-    });
-
-    if (!response.ok) {
-      const errorData = (await response.json()) as ExecuteCodeError;
-      throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
-    }
-
-    const data = await response.json() as ExecuteCodeResponse;
-    return {
-      output: data.output || '',
-      stderr: data.stderr
-    };
-  } catch (error) {
-    if (error instanceof Error) {
-      throw new Error(`Failed to execute code: ${error.message}`);
-    }
-    throw new Error('Failed to execute code: Unknown error');
+    ],
+  });
+  if (response.data.run.output == "") {
+    response.data.run.output = "Execution Timed Out";
   }
+  return response.data;
 };
