@@ -241,6 +241,28 @@ const CollaborationPage: FC = () => {
     };
   }, [collabSocket, commSocket])
 
+  const tagColour = (selected: Question | null, initial: Question): string => {
+    const colour = (val: string): string => {
+      switch (val) {
+        case "Easy":
+          return "bg-green-600"
+        case "Medium":
+          return "bg-orange-600"
+        case "Hard":
+          return "bg-red-600"
+        default:
+          return ""
+      }
+    }
+
+    if (selected) {
+      return colour(selected.complexity);
+    } else {
+      return colour(initial.complexity);
+    }
+
+  }
+
   return (
     <div className="min-h-screen text-white">
       {/* Header */}
@@ -322,7 +344,7 @@ const CollaborationPage: FC = () => {
       <div className="grid grid-cols-2 gap-4 p-4">
         {/* Left Panel - Question and Chat */}
         <div className="flex flex-col gap-4" style={
-          {maxHeight: "100%"}
+          { maxHeight: "100%" }
         }>
           {/* Question */}
           <Card className="border-gray-700 text-white flex flex-col h-full">
@@ -334,7 +356,7 @@ const CollaborationPage: FC = () => {
                 <h2 className="text-lg font-bold text-white">
                   {selectedQuestion?.title || question.title}{" "}
                 </h2>
-                <span className="px-2 py-1 bg-green-600 rounded text-sm">
+                <span className={`px-2 py-1 ${tagColour(selectedQuestion, question)} text-white rounded text-sm`}>
                   {selectedQuestion?.complexity || question.complexity}
                 </span>
               </div>
