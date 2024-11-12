@@ -1,0 +1,139 @@
+services:
+  frontend:
+    build:
+      context: ./frontend
+      target: ${BUILD_ENV}
+    ports:
+      - ${FRONTEND_PORT}:${FRONTEND_PORT}
+    environment:
+      - PORT=${FRONTEND_PORT}
+      - REACT_APP_USER_SVC_PORT=${REACT_APP_USER_SVC_PORT}
+      - REACT_APP_QUESTION_SVC_PORT=${REACT_APP_QUESTION_SVC_PORT}
+      - REACT_APP_MATCHING_SVC_PORT=${REACT_APP_MATCHING_SVC_PORT}
+      - REACT_APP_COLLAB_SVC_PORT=${REACT_APP_COLLAB_SVC_PORT}
+      - REACT_APP_COMM_SVC_PORT=${REACT_APP_COMM_SVC_PORT}
+      - REACT_APP_CODE_EXECUTION_SVC_PORT=${REACT_APP_CODE_EXECUTION_SVC_PORT}
+      - REACT_APP_HISTORY_SVC_PORT=${REACT_APP_HISTORY_SVC_PORT}
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - user-service
+      - question-service
+      - matching-service
+      - collaboration-service
+      - communication-service
+      - code-execution-service
+      - history-service
+
+  user-service:
+    build:
+      context: ./backend/UserService
+      target: ${BUILD_ENV}
+    ports:
+      - ${USER_SVC_PORT}:${USER_SVC_PORT}
+    environment:
+      - PORT=${USER_SVC_PORT}
+      - DB_LOCAL_URI=${USER_DB_URI}
+      - JWT_SECRET=${JWT_SECRET}
+      - FRONTEND_ENDPOINT=${FRONTEND_PORT_URL}
+      - CLOUD_DOMAIN=${FRONTEND_CLOUD_URL}
+      - EMAIL_USERNAME=${EMAIL_USERNAME}
+      - EMAIL_PASSWORD=${EMAIL_PASSWORD}
+      - CLOUDINARY_CLOUD_NAME=${CLOUDINARY_CLOUD_NAME}
+      - CLOUDINARY_API_KEY=${CLOUDINARY_API_KEY}
+      - CLOUDINARY_API_SECRET=${CLOUDINARY_API_SECRET}
+    volumes:
+      - ./backend/UserService:/app
+      - /app/node_modules
+
+  question-service:
+    build:
+      context: ./backend/QuestionService
+      target: ${BUILD_ENV}
+    ports:
+      - ${QUESTION_SVC_PORT}:${QUESTION_SVC_PORT}
+    environment:
+      - PORT=${QUESTION_SVC_PORT}
+      - MONGOURI=${QUESTION_DB_URI}
+      - FRONTEND_ENDPOINT=${FRONTEND_PORT_URL}
+    volumes:
+      - ./backend/QuestionService:/app
+      - /app/node_modules
+
+  matching-service:
+    build:
+      context: ./backend/MatchingService
+      target: ${BUILD_ENV}
+    ports:
+      - ${MATCHING_SVC_PORT}:${MATCHING_SVC_PORT}
+    environment:
+      - PORT=${MATCHING_SVC_PORT}
+      - REDIS_PORT=${REDIS_PORT}
+      - FRONTEND_ENDPOINT=${FRONTEND_PORT_URL}
+    volumes:
+      - ./backend/MatchingService:/app
+      - /app/node_modules
+    depends_on:
+      - redis
+
+  redis:
+    image: redis
+    container_name: redis-container
+    ports:
+      - ${REDIS_PORT}:${REDIS_PORT}
+
+  collaboration-service:
+    build:
+      context: ./backend/CollaborationService
+      target: ${BUILD_ENV}
+    ports:
+      - ${COLLAB_SVC_PORT}:${COLLAB_SVC_PORT}
+    environment:
+      - PORT=${COLLAB_SVC_PORT}
+      - FRONTEND_ENDPOINT=${FRONTEND_PORT_URL}
+    volumes:
+      - ./backend/CollaborationService:/app
+      - /app/node_modules
+
+  communication-service:
+    build:
+      context: ./backend/CommunicationService
+      target: ${BUILD_ENV}
+    ports:
+      - ${COMM_SVC_PORT}:${COMM_SVC_PORT}
+    environment:
+      - PORT=${COMM_SVC_PORT}
+      - MONGOURI=${COMM_DB_URI}
+      - FRONTEND_ENDPOINT=${FRONTEND_PORT_URL}
+    volumes:
+      - ./backend/CommunicationService:/app
+      - /app/node_modules
+
+  code-execution-service:
+    build:
+      context: ./backend/CodeExecutionService
+      target: ${BUILD_ENV}
+    ports:
+      - ${CODE_EXECUTION_SVC_PORT}:${CODE_EXECUTION_SVC_PORT}
+    environment:
+      - JUDGE_0_ENDPOINT=${JUDGE_0_ENDPOINT}
+      - CODE_EXECUTION_SVC_PORT=${CODE_EXECUTION_SVC_PORT}
+      - FRONTEND_ENDPOINT=${FRONTEND_PORT_URL}
+    volumes:
+      - ./backend/CodeExecutionService:/app
+      - /app/node_modules
+  
+  history-service:
+    build:
+      context: ./backend/HistoryService
+      target: ${BUILD_ENV}
+    ports:
+      - ${HISTORY_SVC_PORT}:${HISTORY_SVC_PORT}
+    environment:
+      - PORT=${HISTORY_SVC_PORT}
+      - MONGOURI=${HISTORY_DB_URI}
+      - FRONTEND_ENDPOINT=${FRONTEND_PORT_URL}
+    volumes:
+      - ./backend/HistoryService:/app
+      - /app/node_modules

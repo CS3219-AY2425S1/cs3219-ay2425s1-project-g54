@@ -1,0 +1,76 @@
+{
+  "name": "frontend",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@chakra-ui/react": "^3.0.1",
+    "@emotion/react": "^11.13.3",
+    "@emotion/styled": "^11.13.0",
+    "@fontsource/roboto": "^5.1.0",
+    "@monaco-editor/react": "^4.6.0",
+    "@mui/icons-material": "^6.1.1",
+    "@mui/lab": "^6.0.0-beta.13",
+    "@mui/material": "^6.1.5",
+    "@mui/styled-engine-sc": "^6.1.1",
+    "@mui/x-date-pickers": "^7.17.0",
+    "@tanstack/react-query": "^5.56.2",
+    "@webcontainer/api": "^1.4.0",
+    "axios": "^1.7.7",
+    "extend": "^3.0.2",
+    "dayjs": "^1.11.13",
+    "lucide-react": "^0.453.0",
+    "material-react-table": "^3.0.1",
+    "process": "^0.11.10",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-draggable": "^4.4.6",
+    "react-hook-form": "^7.53.0",
+    "react-hot-toast": "^2.4.1",
+    "react-markdown": "^9.0.1",
+    "react-router-dom": "^6.26.2",
+    "react-scripts": "5.0.1",
+    "remark-gfm": "^4.0.0",
+    "simple-peer": "^9.11.1",
+    "socket.io-client": "^4.8.1",
+    "styled-components": "^6.1.13",
+    "web-vitals": "^2.1.4"
+  },
+  "scripts": {
+    "start": "set PORT=4000 && react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "@tailwindcss/typography": "^0.5.15",
+    "@testing-library/jest-dom": "^5.17.0",
+    "@testing-library/react": "^13.4.0",
+    "@testing-library/user-event": "^13.5.0",
+    "@types/jest": "^27.5.2",
+    "@types/node": "^16.18.115",
+    "@types/react-dom": "^18.3.0",
+    "@types/react": "^18.3.12",
+    "@types/simple-peer": "^9.11.8",
+    "@types/socket.io-client": "^3.0.0",
+    "tailwindcss": "^3.4.12",
+    "typescript": "^4.9.5"
+  }
+}

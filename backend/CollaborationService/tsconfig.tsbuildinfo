@@ -1,0 +1,1 @@
+{"root":["./src/index.ts","./src/controllers/collaborationcontroller.ts","./src/middleware/errormiddleware.ts","./src/sockets/handlers.ts","./src/utils/decoderoom.ts"],"version":"5.6.3"}

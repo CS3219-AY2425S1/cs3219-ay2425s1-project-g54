@@ -1,0 +1,1081 @@
+swagger: "2.0"
+info:
+  title: peerprep-api
+  description: API Gateway for peerprep G54
+  version: 1.0.0
+host: peerprep-api-31pxcopgm65us.apigateway.peerprep-440610.cloud.goog
+x-google-endpoints:
+  - name: peerprep-api-31pxcopgm65us.apigateway.peerprep-440610.cloud.goog
+    allowCors: True
+schemes:
+  - https
+  - http
+produces:
+  - application/json
+paths:
+  /auth/login:
+    # Login
+    post:
+      summary: User login
+      x-google-backend:
+        address: https://user-183444271064.asia-southeast1.run.app/auth/login
+      operationId: userLogin
+      parameters:
+        - in: body
+          name: credentials
+          required: true
+          schema:
+            type: object
+            properties:
+              email:
+                type: string
+                description: The email of the user
+              password:
+                type: string
+                description: The password of the user
+      responses:
+        "200":
+          description: Login successful
+          schema:
+            type: object
+            properties:
+              id:
+                type: string
+                description: "The id of the user."
+              username:
+                type: string
+                description: "The username of the user."
+              email:
+                type: string
+                description: "The email of the user."
+              isAdmin:
+                type: boolean
+                description: "The admin status of user."
+              avatar:
+                type: string
+                description: "The avatar url of the user."
+              createdAt:
+                type: string
+                format: date-time
+                description: "The time user is created."
+    # Logout
+    delete:
+      summary: User logout
+      x-google-backend:
+        address: https://user-183444271064.asia-southeast1.run.app/auth/login
+      operationId: userLogout
+      parameters:
+        - in: header
+          name: Cookie
+          required: true
+          type: string
+          description: "Cookie containing the token required for authentication."
+      responses:
+        "200":
+          description: Logout successful
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: "User logged out successfully."
+  /auth/verify-token:
+    get:
+      summary: Verify user token
+      x-google-backend:
+        address: https://user-183444271064.asia-southeast1.run.app/auth/verify-token
+      operationId: verifyToken
+      description: Verifies the provided token to check if it is valid and active.
+      parameters:
+        - in: header
+          name: Cookie
+          required: true
+          type: string
+          description: "Cookie containing the token required for authentication."
+      responses:
+        "200":
+          description: Token is valid
+          schema:
+            type: object
+            properties:
+              id:
+                type: string
+                description: "The id of the user."
+              username:
+                type: string
+                description: "The username of the user."
+              email:
+                type: string
+                description: "The email of the user."
+              isAdmin:
+                type: boolean
+                description: "The admin status of user."
+              avatar:
+                type: string
+                description: "The avatar url of the user."
+              createdAt:
+                type: string
+                format: date-time
+                description: "The time user is created."
+
+  /users:
+    # Get all user
+    get:
+      summary: Get all user information
+      x-google-backend:
+        address: https://user-183444271064.asia-southeast1.run.app/users
+      operationId: getAllUser
+      parameters:
+        - in: header
+          name: Cookie
+          required: true
+          type: string
+          description: "Cookie containing the token required for authentication."
+      responses:
+        "200":
+          description: All user retrieve successfully
+          schema:
+            type: object
+            properties:
+              users:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      description: "The id of the user."
+                    username:
+                      type: string
+                      description: "The username of the user."
+                    email:
+                      type: string
+                      description: "The email of the user."
+                    isAdmin:
+                      type: boolean
+                      description: "The admin status of user."
+                    avatar:
+                      type: string
+                      description: "The avatar url of the user."
+                    createdAt:
+                      type: string
+                      format: date-time
+                      description: "The time user is created."
+
+    # Create new user
+    post:
+      x-google-backend:
+        address: https://user-183444271064.asia-southeast1.run.app/users
+      summary: Create user
+      operationId: createUser
+      parameters:
+        - in: body
+          name: user
+          schema:
+            type: object
+            required:
+              - username
+              - email
+              - password
+            properties:
+              username:
+                type: string
+                description: "The username of the user."
+              email:
+                type: string
+                description: "The email of the user."
+              password:
+                type: string
+                description: "The password of the user."
+      responses:
+        "201":
+          description: User successfully created
+          schema:
+            type: object
+            properties:
+              id:
+                type: string
+                description: "The id of the user."
+              username:
+                type: string
+                description: "The username of the user."
+              email:
+                type: string
+                description: "The email of the user."
+              isAdmin:
+                type: boolean
+                description: "The admin status of user."
+              avatar:
+                type: string
+                description: "The avatar url of the user."
+              createdAt:
+                type: string
+                format: date-time
+                description: "The time user is created."
+
+  /users/{id}:
+    # Get specific user
+    get:
+      x-google-backend:
+        address: https://user-183444271064.asia-southeast1.run.app/
+        path_translation: APPEND_PATH_TO_ADDRESS
+      summary: Get user information
+      operationId: getUser
+      parameters:
+        - in: header
+          name: Cookie
+          required: true
+          type: string
+          description: "Cookie containing the token required for authentication."
+        - in: path
+          name: id
+          required: true
+          type: string
+          description: "The id of the user to retrieve"
+      responses:
+        "200":
+          description: User retrieve successfully
+          schema:
+            type: object
+            properties:
+              id:
+                type: string
+                description: "The id of the user."
+              username:
+                type: string
+                description: "The username of the user."
+              email:
+                type: string
+                description: "The email of the user."
+              isAdmin:
+                type: boolean
+                description: "The admin status of user."
+              avatar:
+                type: string
+                description: "The avatar url of the user."
+              createdAt:
+                type: string
+                format: date-time
+                description: "The time user is created."
+
+    # Update user
+    patch:
+      x-google-backend:
+        address: https://user-183444271064.asia-southeast1.run.app/
+        path_translation: APPEND_PATH_TO_ADDRESS
+      summary: update user information
+      operationId: updateUser
+      parameters:
+        - in: header
+          name: Cookie
+          required: true
+          type: string
+          description: "Cookie containing the token required for authentication."
+        - in: path
+          name: id
+          required: true
+          type: string
+          description: "The id of the user to retrieve"
+        - in: body
+          name: userUpdate
+          schema:
+            type: object
+            required:
+              - oldPassword
+            properties:
+              username:
+                type: string
+                description: "New username of the user."
+              email:
+                type: string
+                description: "New email of the user."
+              newPassword:
+                type: string
+                description: "New password of the user."
+              oldPassword:
+                type: string
+                description: "Old password of the user."
+              file:
+                type: string
+                format: binary
+                description: "New avatar of the user."
+      responses:
+        "200":
+          description: User profile updated successfully
+          schema:
+            type: object
+            properties:
+              id:
+                type: string
+                description: "The id of the user."
+              username:
+                type: string
+                description: "The username of the user."
+              email:
+                type: string
+                description: "The email of the user."
+              isAdmin:
+                type: boolean
+                description: "The admin status of user."
+              avatar:
+                type: string
+                description: "The avatar url of the user."
+              createdAt:
+                type: string
+                format: date-time
+                description: "The time user is created."
+    delete:
+      x-google-backend:
+        address: https://user-183444271064.asia-southeast1.run.app/
+        path_translation: APPEND_PATH_TO_ADDRESS
+      summary: Delete user
+      operationId: deleteUser
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+          description: "The ID of the user to be deleted."
+        - in: header
+          name: Cookie
+          required: true
+          type: string
+          description: "Cookie containing the token required for authentication."
+      responses:
+        "204":
+          description: User successfully deleted
+
+  /users/{id}/privilege:
+    # Change admin status
+    patch:
+      x-google-backend:
+        address: https://user-183444271064.asia-southeast1.run.app/
+        path_translation: APPEND_PATH_TO_ADDRESS
+      summary: Update user privilege
+      operationId: updateUserPrivilege
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+          description: "The ID of the user whose privilege is to be updated."
+        - in: header
+          name: Cookie
+          required: true
+          type: string
+          description: "Cookie containing the token required for authentication."
+        - in: body
+          name: privilegeUpdate
+          required: true
+          schema:
+            type: object
+            properties:
+              isAdmin:
+                type: boolean
+                description: "Indicates whether the user should have admin privileges (optional)."
+      responses:
+        "200":
+          description: User privilege updated successfully
+          schema:
+            type: object
+            properties:
+              id:
+                type: string
+                description: "The id of the user."
+              username:
+                type: string
+                description: "The username of the user."
+              email:
+                type: string
+                description: "The email of the user."
+              isAdmin:
+                type: boolean
+                description: "The admin status of user."
+              avatar:
+                type: string
+                description: "The avatar url of the user."
+              createdAt:
+                type: string
+                format: date-time
+                description: "The time user is created."
+
+  /users/forgotpassword/{email}:
+    # Request password reset link
+    get:
+      x-google-backend:
+        address: https://user-183444271064.asia-southeast1.run.app/
+        path_translation: APPEND_PATH_TO_ADDRESS
+      summary: Request password reset link
+      operationId: requestPasswordReset
+      parameters:
+        - in: path
+          name: email
+          required: true
+          type: string
+          description: "The email address of the user requesting a password reset."
+      responses:
+        "200":
+          description: A password reset link has been sent
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                description: "Reset password link has been sent."
+
+    # Request for password reset
+  /users/forgotpassword/{token}:
+    post:
+      x-google-backend:
+        address: https://user-183444271064.asia-southeast1.run.app/
+        path_translation: APPEND_PATH_TO_ADDRESS
+      summary: Reset password using token
+      operationId: resetPassword
+      parameters:
+        - in: path
+          name: token
+          required: true
+          type: string
+          description: "The password reset token sent to the user's email."
+        - in: body
+          name: newPassword
+          required: true
+          schema:
+            type: object
+            properties:
+              newPassword:
+                type: string
+                description: "The new password for the user."
+      responses:
+        "200":
+          description: Password successfully reset
+          schema:
+            type: object
+            properties:
+              id:
+                type: string
+                description: "The id of the user."
+              username:
+                type: string
+                description: "The username of the user."
+              email:
+                type: string
+                description: "The email of the user."
+              isAdmin:
+                type: boolean
+                description: "The admin status of user."
+              avatar:
+                type: string
+                description: "The avatar url of the user."
+              createdAt:
+                type: string
+                format: date-time
+                description: "The time user is created."
+  # Verify Account
+  /users/verify/{token}:
+    get:
+      x-google-backend:
+        address: https://user-183444271064.asia-southeast1.run.app/
+        path_translation: APPEND_PATH_TO_ADDRESS
+      summary: Verify account using token
+      operationId: verifyAccount
+      parameters:
+        - in: path
+          name: token
+          required: true
+          type: string
+          description: "The verification token sent to the user's email."
+      responses:
+        "200":
+          description: Account successfully verified
+          schema:
+            type: object
+            properties:
+              id:
+                type: string
+                description: "The id of the user."
+              username:
+                type: string
+                description: "The username of the user."
+              email:
+                type: string
+                description: "The email of the user."
+              isAdmin:
+                type: boolean
+                description: "The admin status of user."
+              avatar:
+                type: string
+                description: "The avatar url of the user."
+              createdAt:
+                type: string
+                format: date-time
+                description: "The time user is created."
+
+  /api/question:
+    # Get all questions
+    get:
+      summary: Get all questions
+      x-google-backend:
+        address: https://question-183444271064.asia-southeast1.run.app/api/question/
+      operationId: getAllQuestions
+      responses:
+        "200":
+          description: A list of all questions
+          schema:
+            type: array
+            items:
+              type: object
+              properties:
+                qid:
+                  type: number
+                  description: "The unique identifier for the question."
+                title:
+                  type: string
+                  description: "The title of the question."
+                description:
+                  type: string
+                  description: "The text description of the question."
+                categories:
+                  type: array
+                  items:
+                    type: string
+                  description: "The categories the question belongs to."
+                complexity:
+                  type: string
+                  enum:
+                    - "Easy"
+                    - "Medium"
+                    - "Hard"
+                  description: "The complexity level of the question."
+    post:
+      # Add new question
+      summary: Add a new question
+      x-google-backend:
+        address: https://question-183444271064.asia-southeast1.run.app/api/question/
+      operationId: addQuestion
+      parameters:
+        - in: body
+          name: question
+          required: true
+          schema:
+            type: object
+            properties:
+              qid:
+                type: number
+                description: "The unique identifier for the question."
+              title:
+                type: string
+                description: "The title of the question."
+              description:
+                type: string
+                description: "The text description of the question."
+              categories:
+                type: array
+                items:
+                  type: string
+                description: "The categories the question belongs to."
+              complexity:
+                type: string
+                enum:
+                  - "Easy"
+                  - "Medium"
+                  - "Hard"
+                description: "The complexity level of the question."
+      responses:
+        "200":
+          description: Question successfully created
+          schema:
+            type: object
+            properties:
+              qid:
+                type: number
+                description: "The unique identifier for the question."
+              title:
+                type: string
+                description: "The title of the question."
+              description:
+                type: string
+                description: "The text description of the question."
+              categories:
+                type: array
+                items:
+                  type: string
+                description: "The categories the question belongs to."
+              complexity:
+                type: string
+                enum:
+                  - "Easy"
+                  - "Medium"
+                  - "Hard"
+                description: "The complexity level of the question."
+
+  /api/question/{qid}:
+    # Get a question
+    get:
+      summary: Get a specific question
+      x-google-backend:
+        address: https://question-183444271064.asia-southeast1.run.app/
+        path_translation: APPEND_PATH_TO_ADDRESS
+      operationId: getOneQuestion
+      parameters:
+        - in: path
+          name: qid
+          required: true
+          type: string
+          description: "The unique identifier for the question to retrieve."
+      responses:
+        "200":
+          description: Question retrieve successfully
+          schema:
+            type: object
+            properties:
+              qid:
+                type: number
+                description: "The unique identifier for the question."
+              title:
+                type: string
+                description: "The title of the question."
+              description:
+                type: string
+                description: "The text description of the question."
+              categories:
+                type: array
+                items:
+                  type: string
+                description: "The categories the question belongs to."
+              complexity:
+                type: string
+                enum:
+                  - "Easy"
+                  - "Medium"
+                  - "Hard"
+                description: "The complexity level of the question."
+    # Delete a question
+    delete:
+      summary: Delete a specific question
+      x-google-backend:
+        address: https://question-183444271064.asia-southeast1.run.app/
+        path_translation: APPEND_PATH_TO_ADDRESS
+      operationId: deleteQuestion
+      parameters:
+        - in: path
+          name: qid
+          required: true
+          type: string
+          description: "The unique identifier for the question to delete."
+      responses:
+        "200":
+          description: Question deleted successfully
+          schema:
+            type: object
+            properties:
+              qid:
+                type: number
+                description: "The unique identifier for the question."
+              title:
+                type: string
+                description: "The title of the question."
+              description:
+                type: string
+                description: "The text description of the question."
+              categories:
+                type: array
+                items:
+                  type: string
+                description: "The categories the question belongs to."
+              complexity:
+                type: string
+                enum:
+                  - "Easy"
+                  - "Medium"
+                  - "Hard"
+                description: "The complexity level of the question."
+    patch:
+      # Update a question
+      summary: Update a specific question
+      x-google-backend:
+        address: https://question-183444271064.asia-southeast1.run.app/
+        path_translation: APPEND_PATH_TO_ADDRESS
+      operationId: updateQuestion
+      parameters:
+        - in: path
+          name: qid
+          required: true
+          type: string
+          description: "The unique identifier for the question to update."
+        - in: body
+          name: question
+          required: true
+          schema:
+            type: object
+            properties:
+              qid:
+                type: number
+                description: "The unique identifier for the question."
+              title:
+                type: string
+                description: "The title of the question."
+              description:
+                type: string
+                description: "The text description of the question."
+              categories:
+                type: array
+                items:
+                  type: string
+                description: "The categories the question belongs to."
+              complexity:
+                type: string
+                enum:
+                  - "Easy"
+                  - "Medium"
+                  - "Hard"
+                description: "The complexity level of the question."
+      responses:
+        "200":
+          description: Question successfully updated
+          schema:
+            type: object
+            properties:
+              qid:
+                type: number
+                description: "The unique identifier for the question."
+              title:
+                type: string
+                description: "The title of the question."
+              description:
+                type: string
+                description: "The text description of the question."
+              categories:
+                type: array
+                items:
+                  type: string
+                description: "The categories the question belongs to."
+              complexity:
+                type: string
+                enum:
+                  - "Easy"
+                  - "Medium"
+                  - "Hard"
+                description: "The complexity level of the question."
+
+  /api/question/random/{difficulty}/{topic}:
+    # Get a random question
+    get:
+      summary: Get a random question based on difficulty and topic
+      x-google-backend:
+        address: https://question-183444271064.asia-southeast1.run.app/
+        path_translation: APPEND_PATH_TO_ADDRESS
+      operationId: getRandomQuestion
+      parameters:
+        - in: path
+          name: difficulty
+          required: true
+          type: string
+          description: "The difficulty level of the question to retrieve."
+        - in: path
+          name: topic
+          required: true
+          type: string
+          description: "The topic the question belongs to."
+      responses:
+        "200":
+          description: A random question object
+          schema:
+            type: object
+            properties:
+              qid:
+                type: number
+                description: "The unique identifier for the question."
+              title:
+                type: string
+                description: "The title of the question."
+              description:
+                type: string
+                description: "The text description of the question."
+              categories:
+                type: array
+                items:
+                  type: string
+                description: "The categories the question belongs to."
+              complexity:
+                type: string
+                enum:
+                  - "Easy"
+                  - "Medium"
+                  - "Hard"
+                description: "The complexity level of the question."
+
+  /api/history:
+    # Add question attemp
+    post:
+      summary: Add a question attempt
+      x-google-backend:
+        address: https://history-183444271064.asia-southeast1.run.app/api/history
+      operationId: addQuestionAttempt
+      parameters:
+        - in: body
+          name: history
+          required: true
+          schema:
+            type: object
+            properties:
+              userId:
+                type: string
+                description: "The unique identifier for the user."
+              qid:
+                type: number
+                description: "The unique identifier for the question."
+      responses:
+        "200":
+          description: A random question object
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                description: "Question attemp recorded on user"
+
+  /api/history/{userId}:
+    # Get all question attempted by specific user
+    get:
+      summary: Get all questions attempted by user
+      x-google-backend:
+        address: https://history-183444271064.asia-southeast1.run.app/
+        path_translation: APPEND_PATH_TO_ADDRESS
+      operationId: getQuestionAttempted
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          type: string
+          description: "The unique identifier of the user."
+      responses:
+        "200":
+          description: A random question object
+          schema:
+            type: object
+            properties:
+              questions:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    userId:
+                      type: string
+                      description: ID of the user associated with the history record
+                    timestamp:
+                      type: string
+                      format: date-time
+                      description: Timestamp of the history record
+                    qid:
+                      type: integer
+                      description: Question ID related to the history record
+
+  /execute:
+    post:
+      summary: Execute code
+      x-google-backend:
+        address: https://code-exec-183444271064.asia-southeast1.run.app/execute
+      operationId: executeCode
+      parameters:
+        - in: body
+          name: execute
+          required: true
+          schema:
+            type: object
+            properties:
+              language:
+                type: string
+                description: "The programming language of the code."
+              code:
+                type: string
+                description: "The code data itself."
+      responses:
+        "200":
+          description: Code successful executed
+          schema:
+            type: object
+            properties:
+              output:
+                type: string
+                description: "The output of the execution."
+              stderr:
+                type: string
+                description: "The error code of the execution."
+              executionTime:
+                type: number
+                description: "The time taken of the execution."
+              memory:
+                type: number
+                description: "The memory used of the execution."
+              statusId:
+                type: number
+                description: "The status ID of the execution."
+              statusDescription:
+                type: string
+                description: "The status description of the execution."
+
+  /matching/socket:
+    # Connect
+    get:
+      summary: Matching connect
+      x-google-backend:
+        address: https://matching-183444271064.asia-southeast1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+        deadline: 40
+      operationId: matchingConnect
+      parameters:
+        - name: EIO
+          in: query
+          required: false
+          type: string
+          description: "Engine.IO protocol version"
+        - name: transport
+          in: query
+          required: false
+          type: string
+          description: "Transport mechanism (e.g., polling)"
+        - name: t
+          in: query
+          required: false
+          type: string
+          description: "Timestamp parameter for caching"
+      responses:
+        "200":
+          description: Connected to matching service.
+
+    post:
+      summary: Send matching content
+      x-google-backend:
+        address: https://matching-183444271064.asia-southeast1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      operationId: sendMatchingContent
+      parameters:
+        - name: EIO
+          in: query
+          required: false
+          type: string
+          description: "Engine.IO protocol version"
+        - name: transport
+          in: query
+          required: false
+          type: string
+          description: "Transport mechanism (e.g., polling)"
+        - name: t
+          in: query
+          required: false
+          type: string
+          description: "Timestamp parameter for caching"
+      responses:
+        "200":
+          description: Matching content send successfully.
+
+  /collaboration/socket:
+    # Connect
+    get:
+      summary: Collaboration connect
+      x-google-backend:
+        address: https://collab-183444271064.asia-southeast1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      operationId: collaborationConnect
+      parameters:
+        - name: EIO
+          in: query
+          required: false
+          type: string
+          description: "Engine.IO protocol version"
+        - name: transport
+          in: query
+          required: false
+          type: string
+          description: "Transport mechanism (e.g., polling)"
+        - name: t
+          in: query
+          required: false
+          type: string
+          description: "Timestamp parameter for caching"
+      responses:
+        "200":
+          description: Connected to collaboration service.
+
+    post:
+      summary: Send collaboration content
+      x-google-backend:
+        address: https://collab-183444271064.asia-southeast1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      operationId: sendCollabotationContent
+      parameters:
+        - name: EIO
+          in: query
+          required: false
+          type: string
+          description: "Engine.IO protocol version"
+        - name: transport
+          in: query
+          required: false
+          type: string
+          description: "Transport mechanism (e.g., polling)"
+        - name: t
+          in: query
+          required: false
+          type: string
+          description: "Timestamp parameter for caching"
+      responses:
+        "200":
+          description: Collaboration content send successfully
+
+  /communication/socket:
+    # Connect
+    get:
+      summary: Communication connect
+      x-google-backend:
+        address: https://comm-183444271064.asia-southeast1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+        deadline: 600
+      operationId: communicationConnect
+      parameters:
+        - name: EIO
+          in: query
+          required: false
+          type: string
+          description: "Engine.IO protocol version"
+        - name: transport
+          in: query
+          required: false
+          type: string
+          description: "Transport mechanism (e.g., polling)"
+        - name: t
+          in: query
+          required: false
+          type: string
+          description: "Timestamp parameter for caching"
+      responses:
+        "200":
+          description: Connected to communication service.
+
+    post:
+      summary: Send communication content
+      x-google-backend:
+        address: https://comm-183444271064.asia-southeast1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+        deadline: 600
+      operationId: sendCommunicationContent
+      parameters:
+        - name: EIO
+          in: query
+          required: false
+          type: string
+          description: "Engine.IO protocol version"
+        - name: transport
+          in: query
+          required: false
+          type: string
+          description: "Transport mechanism (e.g., polling)"
+        - name: t
+          in: query
+          required: false
+          type: string
+          description: "Timestamp parameter for caching"
+      responses:
+        "200":
+          description: Communication content send successfully
