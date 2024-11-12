@@ -45,16 +45,9 @@ export async function findAllUsers() {
   return UserModel.find();
 }
 
-export async function updateUserById(
-  userId,
-  username,
-  email,
-  avatar,
-  password
-) {
+export async function updateUserById(userId, username, avatar, password) {
   const updateFields = {};
   if (username) updateFields.username = username;
-  if (email) updateFields.email = email;
   if (password) updateFields.password = password;
   if (avatar) updateFields.avatar = avatar;
   return UserModel.findByIdAndUpdate(

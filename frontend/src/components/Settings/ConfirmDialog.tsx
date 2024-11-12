@@ -53,7 +53,6 @@ export default function ConfirmSettingDialog({ open, handleDialogCloseFn, data, 
                         const formJson = Object.fromEntries((newData as any).entries());
                         const formData = {
                             username: data.username,
-                            email: data.email,
                             newPassword: data.newPassword,
                             avatar: data.file,
                             oldPassword: formJson.oldPassword,

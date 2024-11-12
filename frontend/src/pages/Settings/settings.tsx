@@ -1,5 +1,4 @@
 import { useForm } from "react-hook-form";
-import EmailIcon from '@mui/icons-material/Email';
 import VpnKeyIcon from '@mui/icons-material/VpnKey';
 import PersonIcon from '@mui/icons-material/Person'
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
@@ -75,24 +74,21 @@ export default function SettingsPage() {
     const { register, handleSubmit, watch, formState: { errors }, reset } = useForm({
         defaultValues: {
             username: "",
-            email: "",
             newPassword: "",
             cfmPassword: "",
         }
     });
 
     const username = watch("username");
-    const email = watch("email");
     const newPassword = watch("newPassword");
 
     const onSubmit = (formData: Record<string, string>) => {
         const data = {
             username: formData.username,
-            email: formData.email,
             newPassword: formData.newPassword,
             file: file,
         }
-        if (data.username || data.email || data.newPassword || data.file) {
+        if (data.username || data.newPassword || data.file) {
             setFormData(data);
             handleDialogOpen();
         } else {
@@ -142,17 +138,6 @@ export default function SettingsPage() {
                                 {...register("username", {
                                     minLength: { value: username.length > 0 ? 4 : 0, message: "Username must be at least 4 characters." },
                                     maxLength: { value: username.length > 0 ? 20 : 0, message: "Username must be at most 20 characters." },
-                                })} />
-                            <TextField label="Email" variant="outlined" placeholder="Enter new email"
-                                error={errors.email !== undefined}
-                                helperText={errors.email?.message}
-                                slotProps={{
-                                    input: {
-                                        startAdornment: (<InputAdornment position="start"><EmailIcon /></InputAdornment>)
-                                    }
-                                }}
-                                {...register("email", {
-                                    pattern: { value: email.length > 0 ? /[a-z0-9]+@[a-z0-9]+\.[a-z]{2,3}/ : /.*/, message: "Email is invalid" },
                                 })} />
                             <TextField label="New Password" variant="outlined" type={showPassword ? "text" : "password"} placeholder="Enter new password"
                                 error={errors.newPassword !== undefined}

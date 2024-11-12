@@ -21,7 +21,8 @@ import { fileRemover } from "../utils/fileRemover.js";
 
 export async function createUser(req, res) {
   try {
-    const { username, email, password } = req.body;
+    const { username, password } = req.body;
+    const email = req.body.email ? req.body.email.toLowerCase() : "";
     if (username && email && password) {
       const existingUser = await _findUserByUsernameOrEmail(username, email);
       if (existingUser) {
@@ -32,7 +33,11 @@ export async function createUser(req, res) {
 
       const salt = bcrypt.genSaltSync(10);
       const hashedPassword = bcrypt.hashSync(password, salt);
-      const createdUser = await _createUser(username, email, hashedPassword);
+      const createdUser = await _createUser(
+        username,
+        email.toLowerCase(),
+        hashedPassword
+      );
       await sendEmail(email, createdUser._id, EMAIL_TYPE.VERIFICATION);
       return res.status(201).json({
         message: `Created new user ${username} successfully`,
@@ -91,10 +96,10 @@ export async function getAllUsers(req, res) {
 
 export async function updateUser(req, res) {
   try {
-    const { username, email, newPassword, oldPassword } = req.body;
+    const { username, newPassword, oldPassword } = req.body;
     const { file } = req;
 
-    if (oldPassword && (username || email || newPassword || file)) {
+    if (oldPassword && (username || newPassword || file)) {
       const userId = req.params.id;
       let newAvatarPath;
       if (!isValidObjectId(userId)) {
@@ -125,14 +130,10 @@ export async function updateUser(req, res) {
         }
       }
 
-      if (username || email) {
+      if (username) {
         let existingUser = await _findUserByUsername(username);
         if (existingUser && existingUser.id !== userId) {
           return res.status(409).json({ message: "username already exists" });
-        }
-        existingUser = await _findUserByEmail(email);
-        if (existingUser && existingUser.id !== userId) {
-          return res.status(409).json({ message: "email already exists" });
         }
       }
 
@@ -145,7 +146,6 @@ export async function updateUser(req, res) {
       const updatedUser = await _updateUserById(
         userId,
         username,
-        email,
         newAvatarPath,
         hashedPassword
       );
@@ -156,7 +156,7 @@ export async function updateUser(req, res) {
     } else {
       return res.status(400).json({
         message:
-          "Missing current password or no field to update: username and email and new password are all missing!",
+          "Missing current password or no field to update: username and new password are all missing!",
       });
     }
   } catch (err) {
@@ -226,7 +226,10 @@ export async function deleteUser(req, res) {
 
 export async function forgetPassword(req, res) {
   try {
-    const userEmail = req.params.email;
+    if (!req.params.email) {
+      return res.status(400).json({ message: "Email is missing" });
+    }
+    const userEmail = req.params.email.toLowerCase();
     const user = await _findUserByEmail(userEmail);
 
     if (user) {

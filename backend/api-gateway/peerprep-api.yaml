@@ -1031,6 +1031,7 @@ paths:
       x-google-backend:
         address: https://comm-183444271064.asia-southeast1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
+        deadline: 600
       operationId: communicationConnect
       parameters:
         - name: EIO
@@ -1057,6 +1058,7 @@ paths:
       x-google-backend:
         address: https://comm-183444271064.asia-southeast1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
+        deadline: 600
       operationId: sendCommunicationContent
       parameters:
         - name: EIO
