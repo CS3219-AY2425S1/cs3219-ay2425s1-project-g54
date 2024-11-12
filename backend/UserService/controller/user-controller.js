@@ -22,7 +22,7 @@ import { fileRemover } from "../utils/fileRemover.js";
 export async function createUser(req, res) {
   try {
     const { username, password } = req.body;
-    const email = req.body.email.toLowerCase();
+    const email = req.body.email ? req.body.email.toLowerCase() : "";
     if (username && email && password) {
       const existingUser = await _findUserByUsernameOrEmail(username, email);
       if (existingUser) {
@@ -226,6 +226,9 @@ export async function deleteUser(req, res) {
 
 export async function forgetPassword(req, res) {
   try {
+    if (!req.params.email) {
+      return res.status(400).json({ message: "Email is missing" });
+    }
     const userEmail = req.params.email.toLowerCase();
     const user = await _findUserByEmail(userEmail);
 

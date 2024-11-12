@@ -6,7 +6,7 @@ import { EMAIL_TYPE, sendEmail } from "../utils/mailer.js";
 
 export async function handleLogin(req, res) {
   const { password } = req.body;
-  const email = req.body.email.toLowerCase();
+  const email = req.body.email ? req.body.email.toLowerCase() : "";
   if (email && password) {
     try {
       const user = await _findUserByEmail(email);
